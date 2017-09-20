@@ -1,4 +1,4 @@
-project(LabAssignment1)
+project(httpc)
 set(CMAKE_MINIMUM_VERSION 3.1)
 cmake_minimum_required(VERSION ${CMAKE_MINIMUM_VERSION})
 
@@ -8,6 +8,9 @@ include(DefaultOptions)
 
 include(DownloadAsio)
 include_directories(${ASIO_INCLUDE_DIR})
+
+include(DownloadCxxopts)
+include_directories(${CXXOPTS_INCLUDE_DIR})
 
 #The following variable requires CMake 3.1
 set(THREADS_PREFER_PTHREAD_FLAG ON)
