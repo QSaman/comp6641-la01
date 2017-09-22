@@ -11,19 +11,26 @@
 
 enum class CommandType {None, Get, Post, Help};
 
+static cxxopts::Options options("httpc", "httpc is a curl-like application but supports HTTP only.");
 static bool verbose = false;
 static std::string header;
 static CommandType command_type = CommandType::None;
 static std::string url;
 static std::string post_data;
 
-[[noreturn]] void print_all_helps(cxxopts::Options& options)
+[[noreturn]] void print_all_helps()
 {
     std::cout << options.help({"", "get", "post"});
     exit(0);
 }
 
-void handle_post_options(cxxopts::Options& options)
+[[noreturn]] void print_help(std::string& help_str)
+{
+    std::cout << options.help({help_str});
+    exit(0);
+}
+
+void handle_post_options()
 {
     bool has_data = false;
     if (options.count("data"))
@@ -68,8 +75,7 @@ void handle_post_options(cxxopts::Options& options)
 
 void process_input_args(int argc, char* argv[])
 {
-    using namespace std;
-    cxxopts::Options options("httpc", "httpc is a curl-like application but supports HTTP only.");
+    using namespace std;    
     options.positional_help("\n  httpc [Option...] [get|post] [URL]\n  httpc [help] [get|post]");
     options.add_options()
             ("help", "Show all help menus")
@@ -90,7 +96,7 @@ void process_input_args(int argc, char* argv[])
     options.parse(argc, argv);
 
     if (options.count("help"))
-        print_all_helps(options);
+        print_all_helps();
     if (options.count("verbose"))
         verbose = true;
     if (options.count("header"))
@@ -137,7 +143,7 @@ void process_input_args(int argc, char* argv[])
         command_type = CommandType::Post;
         url = options["post"].as<string>();
     }
-    handle_post_options(options);
+    handle_post_options();
 }
 
 void test_get()
@@ -154,9 +160,36 @@ void test_post()
     std::cout << "reply: \n" << reply << std::endl;
 }
 
+void print_reply(const std::string& reply)
+{
+    std::cout << "replied message:\n" << reply << std::endl;
+}
+
+void execute_user_request()
+{
+    HttpClient client;
+    std::string reply;
+    switch (command_type)
+    {
+    case CommandType::Get:
+        reply = client.sendGetCommand(url, header, verbose);
+        print_reply(reply);
+        break;
+    case CommandType::Post:
+        reply = client.sendPostCommand(url, post_data, header, verbose);
+        print_reply(reply);
+        break;
+    case CommandType::Help:
+        print_help(url);
+    default:
+        print_all_helps();
+    }
+}
+
 int main(int argc, char* argv[])
 {
-    //process_input_args(argc, argv);
+    process_input_args(argc, argv);
+    execute_user_request();
     //test_get();
-    test_post();
+    //test_post();
 }

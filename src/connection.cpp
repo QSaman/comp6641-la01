@@ -62,6 +62,16 @@ std::string AsioTcpConnection::read()
 
 AsioTcpConnection::~AsioTcpConnection()
 {
+    asio::error_code ec;
+    _socket.shutdown(asio::ip::tcp::socket::shutdown_both, ec);
+    if (ec)
+    {
+        std::cerr << "Error in shutting down the socket (" << ec.value() << "): " << ec.message() << std::endl;
+        return;
+    }
+    _socket.close(ec);
+    if (ec)
+        std::cerr << "Erro in closing the socket (" << ec.value() << "): " << ec.message() << std::endl;
 }
 
 
