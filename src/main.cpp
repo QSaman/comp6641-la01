@@ -5,7 +5,6 @@
 #include <fstream>
 #include <sstream>
 #include <cxxopts.hpp>
-#include <asio.hpp>
 
 #include "connection.h"
 
@@ -142,12 +141,10 @@ void process_input_args(int argc, char* argv[])
 
 int main(int argc, char* argv[])
 {
-    int a = 7;
     //process_input_args(argc, argv);
-    asio::io_service io_service;
-    TcpConnection* con = new AsioTcpConnection(io_service, "127.0.0.1", 7777);
+    auto con = TcpConnectionFactory::createInstance("httpbin.org", 80);
     con->connect();
-    con->write("Hello There!");
+    con->write("GET /status/418 HTTP/1.0\r\nHost: httpbin.org\r\n\r\n");
     auto reply = con->read();
     std::cout << "reply: " << reply << ". length: " << reply.length() << std::endl;
 }

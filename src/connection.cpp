@@ -1,8 +1,11 @@
 #include <asio.hpp>
 #include <sstream>
 #include <string>
+#include <iostream>
 
 #include "connection.h"
+
+asio::io_service TcpConnectionFactory::_io_service;
 
 TcpConnection::TcpConnection(const std::string& server_address, const int port) :
     _port{port}, _server_address{server_address}
@@ -23,23 +26,46 @@ void AsioTcpConnection::connect()
     std::ostringstream iss;
     asio::ip::tcp::resolver resolver(_io_service);
     iss << _port;
-    asio::connect(_socket, resolver.resolve({_server_address, iss.str()}));
+    asio::error_code ec;
+    asio::connect(_socket, resolver.resolve({_server_address, iss.str()}), ec);
+    if (ec)
+    {
+        std::cerr << "Connection error (" << ec.value() << "): " << ec.message() << std::endl;
+        exit(ec.value());
+    }
 }
 
 void AsioTcpConnection::write(const std::string& message)
 {
-    asio::write(_socket, asio::buffer(message));
+    asio::error_code ec;
+    asio::write(_socket, asio::buffer(message), ec);
+    if (ec)
+    {
+        std::cerr << "Error in writing data (" << ec.value() << "): " << ec.message() << std::endl;
+        exit(ec.value());
+    }
 }
 
 std::string AsioTcpConnection::read()
 {
-    std::string reply;
-    reply.resize(1000);
-    asio::read(_socket, asio::buffer(reply));
-    return reply;
+    asio::streambuf sb;
+    asio::error_code ec;
+    auto n = asio::read(_socket, sb, ec);
+    if (ec && ec != asio::error::eof)
+    {
+        std::cerr << "Error in reading data (" << ec.value() << "): " << ec.message() << std::endl;
+        exit(ec.value());
+    }
+    auto bufs = sb.data();
+    return std::string(asio::buffers_begin(bufs), asio::buffers_begin(bufs) + n);
 }
 
 AsioTcpConnection::~AsioTcpConnection()
 {
 }
 
+
+std::unique_ptr<TcpConnection> TcpConnectionFactory::createInstance(const std::string& server_address, const int port)
+{
+    return std::unique_ptr<TcpConnection>(new AsioTcpConnection(_io_service, server_address, port));
+}

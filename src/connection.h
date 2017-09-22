@@ -11,7 +11,7 @@ public:
     virtual void connect() = 0;
     virtual void write(const std::string& message) = 0;
     virtual std::string read() = 0;
-    virtual ~TcpConnection();;
+    virtual ~TcpConnection();
 protected:
     int _port;
     std::string _server_address;
@@ -28,6 +28,14 @@ public:
 private:
     asio::ip::tcp::socket _socket;
     asio::io_service& _io_service;
+};
+
+class TcpConnectionFactory
+{
+public:
+    static std::unique_ptr<TcpConnection> createInstance(const std::string& server_address, const int port);
+private:
+    static asio::io_service _io_service;
 };
 
 
