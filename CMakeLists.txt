@@ -12,10 +12,15 @@ include_directories(${ASIO_INCLUDE_DIR})
 include(DownloadCxxopts)
 include_directories(${CXXOPTS_INCLUDE_DIR})
 
+include(DownloadLUrlParser)
+include_directories(${LURLPARSER_INCLUDE_DIR})
+set(LIBRARIES ${LURLPARSER_LIBRARIES})
+
 #The following variable requires CMake 3.1
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
 ucm_add_dirs(src TO SRC_LIST)
 add_executable(${PROJECT_NAME} ${SRC_LIST})
-target_link_libraries(${PROJECT_NAME} Threads::Threads)
+add_dependencies(${PROJECT_NAME} external_asio external_cxxopts)
+target_link_libraries(${PROJECT_NAME} Threads::Threads ${LURLPARSER_LIBRARIES})
