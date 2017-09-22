@@ -7,6 +7,7 @@
 #include <cxxopts.hpp>
 
 #include "connection.h"
+#include "http_client.h"
 
 enum class CommandType {None, Get, Post, Help};
 
@@ -139,12 +140,23 @@ void process_input_args(int argc, char* argv[])
     handle_post_options(options);
 }
 
+void test_get()
+{
+    HttpClient client;
+    auto reply = client.sendGetCommand("http://httpbin.org/get?course=networking&assignment=2", "", true);
+    std::cout << "reply: \n" << reply << std::endl;
+}
+
+void test_post()
+{
+    HttpClient client;
+    auto reply = client.sendPostCommand("http://httpbin.org/post", "{\"Assignment\": 1}", "Content-Type:application/json", true);
+    std::cout << "reply: \n" << reply << std::endl;
+}
+
 int main(int argc, char* argv[])
 {
     //process_input_args(argc, argv);
-    auto con = TcpConnectionFactory::createInstance("httpbin.org", 80);
-    con->connect();
-    con->write("GET /status/418 HTTP/1.0\r\nHost: httpbin.org\r\n\r\n");
-    auto reply = con->read();
-    std::cout << "reply: " << reply << ". length: " << reply.length() << std::endl;
+    //test_get();
+    test_post();
 }
