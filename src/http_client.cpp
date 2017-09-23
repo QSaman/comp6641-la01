@@ -54,6 +54,15 @@ HttpClient::RepliedMessage HttpClient::sendPostCommand(const std::string& url, c
     return reply;
 }
 
+bool HttpClient::isTextBody(const std::string& mime)
+{
+   if (mime == "application/json" || mime.substr(0, 4) == "text")
+       return true;
+   if (mime == "application/javascript" || mime == "application/xml")
+       return true;
+   return false;
+}
+
 HttpClient::RepliedMessage HttpClient::extractMessage(const std::string& message)
 {
     using namespace std;
@@ -89,11 +98,27 @@ HttpClient::RepliedMessage HttpClient::extractMessage(const std::string& message
         line.push_back('\n');
         reply.header += line;
     }
-    //Reading body of message. Since it can be binary data, we don't modify end-of-line characters
-    //It can be problematic if it's text and we want to store it in an OS other than Windows
-    char ch;
-    while (ss.get(ch))
-        reply.body += ch;
+    //Reading body of message
+    reply.is_text_body = isTextBody(reply.http_header["Content-Type"]);
+    if (reply.is_text_body)
+    {
+        while (std::getline(ss, line))
+        {
+//If we notify server (by using User-Agent) that we are using Linux, it's possible the end-of-line of body will be in Linux Format (\n)
+            if (line.back() == '\r')
+                line.pop_back();
+            if (line.back() != '\n')
+                line.push_back('\n');
+            reply.body += line;
+        }
+    }
+    else
+    {
+        //Since body is binary, we don't modify end-of-line characters
+        char ch;
+        while (ss.get(ch))
+            reply.body += ch;
+    }
 
     return reply;
 }

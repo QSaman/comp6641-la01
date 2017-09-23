@@ -229,21 +229,22 @@ void test_post()
     std::cout << "reply: \n" << reply.body << std::endl;
 }
 
-void print_reply(const std::string& reply)
+void print_reply(HttpClient::RepliedMessage& reply)
 {
     if (output_file.empty())
     {
-        std::cout << "replied message:\n" << reply << std::endl;
+        std::cout << "replied message:\n" << reply.body << std::endl;
         return;
     }
     std::ofstream out;
     out.exceptions(std::ifstream::badbit | std::ifstream::failbit);
     try
     {
-        //It's important to open as binary file. Otherwise binary files doesn't save correctly in Windows:
-        //TODO text files store with Windows end-of-line (\r\n) in Linux.
-        out.open(output_file, std::ofstream::binary);
-        out << reply;
+        if (reply.is_text_body)
+            out.open(output_file);
+        else
+            out.open(output_file, std::ofstream::binary);
+        out << reply.body;
     } catch (std::ofstream::failure e)
     {
         std::cerr << "Error in writing into " << output_file << std::endl;
@@ -294,11 +295,11 @@ void execute_user_request()
         {
             reply = client.sendGetCommand(url, header, verbose);
         } while(check_redirect(reply));
-        print_reply(reply.body);
+        print_reply(reply);
         break;
     case CommandType::Post:
         reply = client.sendPostCommand(url, post_data, header, verbose);
-        print_reply(reply.body);
+        print_reply(reply);
         break;
     case CommandType::Help:
         print_help(url);
