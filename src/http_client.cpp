@@ -54,11 +54,12 @@ HttpClient::RepliedMessage HttpClient::sendPostCommand(const std::string& url, c
     return reply;
 }
 
+//TODO this list is incomplete
 bool HttpClient::isTextBody(const std::string& mime)
-{
-   if (mime == "application/json" || mime.substr(0, 4) == "text")
+{    
+   if (mime.substr(0, 16) == "application/json" || mime.substr(0, 4) == "text")
        return true;
-   if (mime == "application/javascript" || mime == "application/xml")
+   if (mime.substr(0, 22) == "application/javascript" || mime.substr(0, 15) == "application/xml")
        return true;
    return false;
 }
@@ -79,8 +80,11 @@ HttpClient::RepliedMessage HttpClient::extractMessage(const std::string& message
         if (!read_status_code && line.substr(0, 4) == "HTTP")
         {
             read_status_code = true;
+            reply.protocol = "HTTP";
             std::stringstream ss(line.substr(5));
-            ss >> reply.http_version >> reply.status_code;
+            ss >> reply.protocol_version >> reply.status_code;
+            ss.get(); //Remove space between status code and status message (200 OK)
+            std::getline(ss, reply.status_message);
         }
         else
         {

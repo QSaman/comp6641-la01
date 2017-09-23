@@ -12,8 +12,9 @@ class HttpClient
 public:
     struct RepliedMessage
     {
-        std::string header, body, http_version;
+        std::string header, body, protocol, protocol_version;
         int status_code;
+        std::string status_message;
         HttpHeader http_header;
         bool is_text_body;  //Weather or not the body is text or binary
     };
