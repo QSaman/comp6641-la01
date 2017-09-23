@@ -40,7 +40,7 @@ You can see various examples in the following line. For more information about a
 $ ./httpc -v get "http://httpbin.org/get?course=networking&assignment=1"
 $ ./httpc -v post "http://httpbin.org/post" -h "Content-Type: application/json" -d '{"Assignment": 1}'
 $ ./httpc -v post "http://httpbin.org/post" -h "Content-Type: application/json" -f sample_files/post_data_1.txt
-$ ./httpc -v post "http://httpbin.org/post" -h "Content-Type: application/json" -f sample_files/post_data_2 .txt
+$ ./httpc -v post "http://httpbin.org/post" -h "Content-Type: application/json" -f sample_files/post_data_2.txt
 $ ./httpc -v post "http://httpbin.org/post" -h "Content-Type: application/x-www-form-urlencoded" -f sample_files/post_data_3.txt
 ```
 
