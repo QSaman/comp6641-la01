@@ -61,10 +61,11 @@ HttpClient::RepliedMessage HttpClient::extractMessage(const std::string& message
     string line;
     RepliedMessage reply;
     bool read_status_code = false;
-    //Handling different characters which represent newline in different operating systems can be tricky!
-    while (getline(ss, line) && line != "\r" && !line.empty())
+    //End-of-line in HTTP protocol is "\r\n" no matter what OS we are using
+    //There is an empty line between header and body of message
+    while (getline(ss, line) && line != "\r")
     {
-        if (line.back() == '\r')
+        if (line.back() == '\r' || line.back() == '\n') //It's a bug in server if the last char is '\n'
             line.pop_back();
         if (!read_status_code && line.substr(0, 4) == "HTTP")
         {
@@ -88,6 +89,8 @@ HttpClient::RepliedMessage HttpClient::extractMessage(const std::string& message
         line.push_back('\n');
         reply.header += line;
     }
+    //Reading body of message. Since it can be binary data, we don't modify end-of-line characters
+    //It can be problematic if it's text and we want to store it in an OS other than Windows
     char ch;
     while (ss.get(ch))
         reply.body += ch;

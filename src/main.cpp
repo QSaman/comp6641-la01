@@ -61,19 +61,29 @@ void handle_post_data()
         }
         auto file_path = options["file"].as<std::string>();
         std::ifstream fin;
-        std::ostringstream oss;
+        std::stringstream ss;
         fin.exceptions(std::ifstream::badbit | std::ifstream::failbit);
         try
         {
             fin.open(file_path);
-            oss << fin.rdbuf();
+            ss << fin.rdbuf();
+            std::string line;
+            bool first = true;
+            //fstream handles different end-of-line in different platforms so we don't need to use: line != '\r'
+            while (std::getline(ss, line))
+            {
+                if (first)
+                    first = false;
+                else
+                    line = "\r\n" + line;   //HTTP line break
+                post_data += line;
+            }
         }
         catch(std::ifstream::failure e)
         {
             std::cerr << "Error in reading file " << file_path << std::endl;
             exit(1);
         }
-        post_data = oss.str();
     }
 }
 
@@ -104,14 +114,14 @@ void handle_http_header()
             ss << fin.rdbuf();
             std::string line;
             bool first = true;
-            while (std::getline(ss, line) && line != "\r")
+            //fstream handles different end-of-line in different platforms so we don't need to use: line != '\r'
+            //After the last line of header there should be an empty line, so it's invalid we have an empty line in header
+            while (std::getline(ss, line) && !line.empty())
             {
-                if (line.back() == '\r')
-                    line.pop_back();
                 if (first)
                     first = false;
                 else
-                    line = "\n" + line;
+                    line = "\r\n" + line;   //HTTP line break
                 header += line;
             }
         }
@@ -230,6 +240,8 @@ void print_reply(const std::string& reply)
     out.exceptions(std::ifstream::badbit | std::ifstream::failbit);
     try
     {
+        //It's important to open as binary file. Otherwise binary files doesn't save correctly in Windows:
+        //TODO text files store with Windows end-of-line (\r\n) in Linux.
         out.open(output_file, std::ofstream::binary);
         out << reply;
     } catch (std::ofstream::failure e)
