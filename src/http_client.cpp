@@ -74,7 +74,7 @@ HttpClient::RepliedMessage HttpClient::extractMessage(const std::string& message
     //There is an empty line between header and body of message
     while (getline(ss, line) && line != "\r")
     {
-        if (line.back() == '\r' || line.back() == '\n') //It's a bug in server if the last char is '\n'
+        if (line.back() == '\r')
             line.pop_back();
         if (!read_status_code && line.substr(0, 4) == "HTTP")
         {
@@ -105,10 +105,9 @@ HttpClient::RepliedMessage HttpClient::extractMessage(const std::string& message
         while (std::getline(ss, line))
         {
 //If we notify server (by using User-Agent) that we are using Linux, it's possible the end-of-line of body will be in Linux Format (\n)
-            if (line.back() == '\r')
+            if (!line.empty() && line.back() == '\r')
                 line.pop_back();
-            if (line.back() != '\n')
-                line.push_back('\n');
+            line.push_back('\n');
             reply.body += line;
         }
     }
