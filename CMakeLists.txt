@@ -26,3 +26,6 @@ add_dependencies(${PROJECT_NAME} external_asio external_cxxopts)
 target_link_libraries(${PROJECT_NAME} Threads::Threads ${LURLPARSER_LIBRARIES})
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
 COMMAND "${CMAKE_COMMAND}" -E copy_directory "${PROJECT_SOURCE_DIR}/sample_files" "${PROJECT_BINARY_DIR}/sample_files")
+
+install(TARGETS ${PROJECT_NAME} DESTINATION "bin")
+install(DIRECTORY "${PROJECT_SOURCE_DIR}/sample_files" DESTINATION "bin")
