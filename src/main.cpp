@@ -5,6 +5,7 @@
 #include <fstream>
 #include <sstream>
 #include <cxxopts.hpp>
+#include <LUrlParser.h>
 
 #include "connection.h"
 #include "http_client.h"
@@ -17,6 +18,9 @@ static std::string header;
 static CommandType command_type = CommandType::None;
 static std::string url;
 static std::string post_data;
+static std::string output_file;
+static bool redirect = false;
+static int max_redirection = 50;
 
 [[noreturn]] void print_all_helps()
 {
@@ -30,7 +34,7 @@ static std::string post_data;
     exit(0);
 }
 
-void handle_post_options()
+void handle_post_data()
 {
     bool has_data = false;
     if (options.count("data"))
@@ -73,6 +77,41 @@ void handle_post_options()
     }
 }
 
+void handle_http_header()
+{
+    using namespace std;
+
+    bool has_data = false;
+    if (options.count("header"))
+    {
+        header = options["header"].as<std::string>();
+        has_data = true;
+    }
+    if (options.count("header-file"))
+    {
+        if (has_data)
+        {
+            std::cerr << "You cannot use both --header and --header-file" << std::endl;
+            exit(1);
+        }
+        auto file_path = options["header-file"].as<std::string>();
+        std::ifstream fin;
+        std::ostringstream oss;
+        fin.exceptions(std::ifstream::badbit | std::ifstream::failbit);
+        try
+        {
+            fin.open(file_path);
+            oss << fin.rdbuf();
+        }
+        catch(std::ifstream::failure e)
+        {
+            std::cerr << "Error in reading file " << file_path << std::endl;
+            exit(1);
+        }
+        header = oss.str();
+    }
+}
+
 void process_input_args(int argc, char* argv[])
 {
     using namespace std;    
@@ -80,7 +119,11 @@ void process_input_args(int argc, char* argv[])
     options.add_options()
             ("help", "Show all help menus")
             ("v,verbose", "Prints the detail of the response such as protocol, status, and headers")
-            ("h,header", "Associate headers to HTTP Request with the format 'key:value'", cxxopts::value<string>(), "key:value");
+            ("h,header", "Associate headers to HTTP Request with the format 'key:value'", cxxopts::value<string>(), "key:value")
+            ("F,header-file", "Associate the content of a file as headers to HTTP Request", cxxopts::value<string>(), "file")
+            ("o,output-file", "Writing the body of response to file", cxxopts::value<string>(), "file")
+            ("r,redirect", "Redirect to a new address when server sends a status code 3xx")
+            ("m,max-redirection", "Maximum number of redirection. If you use -1 it means infinity. The default is 50.", cxxopts::value<int>(), "N");
     //The following options are invisible to the user we only use them for positional arguments
     options.add_options("positional")
             ("c, command", "get is a HTTP GET and post is HTTP POST and help is this text", cxxopts::value<string>(), "get|post|help")
@@ -97,10 +140,14 @@ void process_input_args(int argc, char* argv[])
 
     if (options.count("help"))
         print_all_helps();
+    if (options.count("redirect"))
+        redirect = true;
+    if (options.count("max-redirection"))
+        max_redirection = options["max-redirection"].as<int>();
     if (options.count("verbose"))
         verbose = true;
-    if (options.count("header"))
-        header = options["header"].as<string>();
+    if (options.count("output-file"))
+        output_file = options["output-file"].as<string>();
     if (options.count("command"))
     {
         auto cmd_str = options["command"].as<string>();
@@ -143,41 +190,92 @@ void process_input_args(int argc, char* argv[])
         command_type = CommandType::Post;
         url = options["post"].as<string>();
     }
-    handle_post_options();
+    handle_http_header();
+    handle_post_data();
 }
 
 void test_get()
 {
     HttpClient client;
     auto reply = client.sendGetCommand("http://httpbin.org/get?course=networking&assignment=2", "", true);
-    std::cout << "reply: \n" << reply << std::endl;
+    std::cout << "reply: \n" << reply.body << std::endl;
 }
 
 void test_post()
 {
     HttpClient client;
     auto reply = client.sendPostCommand("http://httpbin.org/post", "{\"Assignment\": 1}", "Content-Type:application/json", true);
-    std::cout << "reply: \n" << reply << std::endl;
+    std::cout << "reply: \n" << reply.body << std::endl;
 }
 
 void print_reply(const std::string& reply)
 {
-    std::cout << "replied message:\n" << reply << std::endl;
+    if (output_file.empty())
+    {
+        std::cout << "replied message:\n" << reply << std::endl;
+        return;
+    }
+    std::ofstream out;
+    out.exceptions(std::ifstream::badbit | std::ifstream::failbit);
+    try
+    {
+        out.open(output_file);
+        out << reply;
+    } catch (std::ofstream::failure e)
+    {
+        std::cerr << "Error in writing into " << output_file << std::endl;
+        exit(1);
+    }
+}
+
+bool check_redirect(HttpClient::RepliedMessage& reply)
+{
+    if (reply.status_code < 300 || reply.status_code > 399)
+        return false;
+    static int redirect_num = 0;
+    if (!redirect || redirect_num >= max_redirection)
+        return false;
+    ++redirect_num;
+    auto str = reply.http_header["Location"];
+    if (str[0] != '/')
+        url = str;
+    else
+    {
+        using LUrlParser::clParseURL;
+        clParseURL lurl = clParseURL::ParseURL(url);
+        auto new_url = "http://" + lurl.m_Host + str;
+        if (!lurl.m_Query.empty())
+        {
+            new_url.push_back('?');
+            new_url += lurl.m_Query;
+        }
+        if (!lurl.m_Fragment.empty())
+        {
+            new_url.push_back('#');
+            new_url += lurl.m_Fragment;
+        }
+        url = new_url;
+    }
+    std::cout << redirect_num << ": Redirecting to " << url << std::endl << "************" << std::endl;
+    return true;
 }
 
 void execute_user_request()
 {
     HttpClient client;
-    std::string reply;
+    HttpClient::RepliedMessage reply;
     switch (command_type)
     {
     case CommandType::Get:
-        reply = client.sendGetCommand(url, header, verbose);
-        print_reply(reply);
+        do
+        {
+            reply = client.sendGetCommand(url, header, verbose);
+        } while(check_redirect(reply));
+        print_reply(reply.body);
         break;
     case CommandType::Post:
         reply = client.sendPostCommand(url, post_data, header, verbose);
-        print_reply(reply);
+        print_reply(reply.body);
         break;
     case CommandType::Help:
         print_help(url);

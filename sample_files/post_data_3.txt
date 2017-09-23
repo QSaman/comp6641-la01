@@ -1,0 +1,9 @@
+{
+    "comments": "I love Pizza!", 
+    "custemail": "s@gmail.com", 
+    "custname": "Saman", 
+    "custtel": "514 681 1234", 
+    "delivery": "20:00", 
+    "size": "large", 
+    "topping": "onion"
+  } 

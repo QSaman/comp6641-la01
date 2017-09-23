@@ -6,7 +6,7 @@
 #include <sstream>
 #include <memory>
 
-std::string HttpClient::sendGetCommand(const std::string& url, const std::string& header, bool verbose)
+HttpClient::RepliedMessage HttpClient::sendGetCommand(const std::string& url, const std::string& header, bool verbose)
 {
     using LUrlParser::clParseURL;
     clParseURL lurl = clParseURL::ParseURL(url);
@@ -27,10 +27,10 @@ std::string HttpClient::sendGetCommand(const std::string& url, const std::string
     auto reply = extractMessage(connection->read());
     if (verbose)
         std::cout << "Reply Header:" << std::endl << reply.header << "------------" << std::endl;
-    return reply.body;
+    return reply;
 }
 
-std::string HttpClient::sendPostCommand(const std::string& url, const std::string& data, const std::string& header, bool verbose)
+HttpClient::RepliedMessage HttpClient::sendPostCommand(const std::string& url, const std::string& data, const std::string& header, bool verbose)
 {
     using LUrlParser::clParseURL;
     clParseURL lurl = clParseURL::ParseURL(url);
@@ -51,7 +51,7 @@ std::string HttpClient::sendPostCommand(const std::string& url, const std::strin
     auto reply = extractMessage(connection->read());
     if (verbose)
         std::cout << "Reply Header:" << std::endl << reply.header << "------------" << std::endl;
-    return reply.body;
+    return reply;
 }
 
 HttpClient::RepliedMessage HttpClient::extractMessage(const std::string& message)
@@ -60,21 +60,37 @@ HttpClient::RepliedMessage HttpClient::extractMessage(const std::string& message
     stringstream ss(message);
     string line;
     RepliedMessage reply;
+    bool read_status_code = false;
     //Handling different characters which represent newline in different operating systems can be tricky!
     while (getline(ss, line) && line != "\r" && !line.empty())
     {
         if (line.back() == '\r')
             line.pop_back();
+        if (!read_status_code && line.substr(0, 4) == "HTTP")
+        {
+            read_status_code = true;
+            std::stringstream ss(line.substr(5));
+            ss >> reply.http_version >> reply.status_code;
+        }
+        else
+        {
+            auto index = line.find(':');
+            if (index != line.npos)
+            {
+                std::string key, value;
+                key = line.substr(0, index);
+                if ((index + 1) < line.length() && line[index + 1] == ' ')
+                    ++index;
+                value = line.substr(index + 1);
+                reply.http_header[key] = value;
+            }
+        }
         line.push_back('\n');
         reply.header += line;
     }
-    while (getline(ss, line))
-    {
-        if (line.back() == '\r')
-            line.pop_back();
-        line.push_back('\n');
-        reply.body += line;
-    }
+    char ch;
+    while (ss.get(ch))
+        reply.body += ch;
 
     return reply;
 }

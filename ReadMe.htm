@@ -14,6 +14,12 @@
 <li><a href="#requirements">Requirements</a></li>
 <li><a href="#how-to-build">How to Build</a><ul>
 <li><a href="#how-to-build-in-linux">How to Build in Linux</a></li>
+<li><a href="#how-to-build-in-windows">How to Build in Windows</a></li>
+</ul></li>
+<li><a href="#examples">Examples</a></li>
+<li><a href="#optional-tasks">Optional Tasks</a><ul>
+<li><a href="#support-redirection">Support Redirection</a></li>
+<li><a href="#writing-the-body-of-the-response-to-a-file">Writing The Body of The Response to a file</a></li>
 </ul></li>
 <li><a href="#third-party-libraries">Third-Party Libraries</a></li>
 </ul>
@@ -28,12 +34,33 @@
 $ cd build
 $ cmake ..
 $ make</code></pre>
-<p>For more information about using CMake check out this <a href="https://cmake.org/runningcmake/">link</a>. ## How to Build in Windows</p>
+<p>For more information about using CMake check out this <a href="https://cmake.org/runningcmake/">link</a>.</p>
+<h2 id="how-to-build-in-windows">How to Build in Windows</h2>
 <p>You can use the graphical interface of CMake to generate a project (for example Visual Studio project). If you prefer command line interface, first go to the project path and then execute the following commands:</p>
 <pre><code>mkdir build
 cd build
 cmake ..</code></pre>
 <p>Then you can open the generated project with your favorite IDE (e.g. Visual Studio). For more information about using CMake check out this <a href="https://cmake.org/runningcmake/">link</a>.</p>
+<h1 id="examples">Examples</h1>
+<p>You can see various examples in the following line. For more information about available arguments run <code>./httpc --help</code>.</p>
+<pre><code>$ ./httpc -v get &quot;http://httpbin.org/get?course=networking&amp;assignment=1&quot;
+$ ./httpc -v post &quot;http://httpbin.org/post&quot; -h &quot;Content-Type: application/json&quot; -d &#39;{&quot;Assignment&quot;: 1}&#39;
+$ ./httpc -v post &quot;http://httpbin.org/post&quot; -h &quot;Content-Type: application/json&quot; -f sample_files/post_data_1.txt
+$ ./httpc -v post &quot;http://httpbin.org/post&quot; -h &quot;Content-Type: application/json&quot; -f sample_files/post_data_2 .txt
+$ ./httpc -v post &quot;http://httpbin.org/post&quot; -h &quot;Content-Type: application/x-www-form-urlencoded&quot; -f sample_files/post_data_3.txt</code></pre>
+<p>You can find some sample files for <code>--file</code> option in <code>sample_files</code> directory.</p>
+<h1 id="optional-tasks">Optional Tasks</h1>
+<h2 id="support-redirection">Support Redirection</h2>
+<p>I implemented both absolute and relative redirection.</p>
+<pre><code>$ ./httpc -v --redirect get &quot;http://httpbin.org/redirect-to?url=http://example.com&quot;
+$ ./httpc -v --redirect  get &quot;http://httpbin.org/redirect/6&quot;
+$ ./httpc -v --redirect --max-redirection=3 get &quot;http://httpbin.org/redirect/6&quot;
+$ ./httpc -v --redirect  get &quot;http://httpbin.org/relative-redirect/6&quot;
+$ ./httpc -v --redirect  get &quot;http://httpbin.org/absolute-redirect/6&quot;</code></pre>
+<h2 id="writing-the-body-of-the-response-to-a-file">Writing The Body of The Response to a file</h2>
+<p>We can store both text and binary files using <code>-o</code> flag.</p>
+<pre><code>$ ./httpc -v  get &quot;http://httpbin.org/image/png&quot; -o image.png
+$ ./httpc -v get &quot;http://download.blender.org/peach/bigbuckbunny_movies/big_buck_bunny_480p_surround-fix.avi&quot; -o big_buck_bunny.avi</code></pre>
 <h1 id="third-party-libraries">Third-Party Libraries</h1>
 <p>I’ve used the following external libraries. You don’t need to download them. It’s the job of CMake:</p>
 <ul>

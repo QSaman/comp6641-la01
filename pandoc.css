@@ -16,6 +16,7 @@ pre {
     background-color: #ececec;
     color: #1111111;
     padding: 0.5em;
+    overflow: auto;
 }
 code {
     font-family: monospace;

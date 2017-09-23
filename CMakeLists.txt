@@ -24,3 +24,5 @@ ucm_add_dirs(src TO SRC_LIST)
 add_executable(${PROJECT_NAME} ${SRC_LIST})
 add_dependencies(${PROJECT_NAME} external_asio external_cxxopts)
 target_link_libraries(${PROJECT_NAME} Threads::Threads ${LURLPARSER_LIBRARIES})
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+COMMAND "${CMAKE_COMMAND}" -E copy_directory "${PROJECT_SOURCE_DIR}/sample_files" "${PROJECT_BINARY_DIR}/sample_files")

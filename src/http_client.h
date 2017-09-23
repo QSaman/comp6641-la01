@@ -2,19 +2,23 @@
 
 #include <string>
 #include <sstream>
+#include <map>
 
 namespace LUrlParser{ class clParseURL; }
+using HttpHeader = std::map<std::string, std::string>;
 
 class HttpClient
 {
 public:
     struct RepliedMessage
     {
-        std::string header, body;
+        std::string header, body, http_version;
+        int status_code;
+        HttpHeader http_header;
     };
 public:
-    std::string sendGetCommand(const std::string& url, const std::string& header = "", bool verbose = false);
-    std::string sendPostCommand(const std::string& url, const std::string& data = "",
+    RepliedMessage sendGetCommand(const std::string& url, const std::string& header = "", bool verbose = false);
+    RepliedMessage sendPostCommand(const std::string& url, const std::string& data = "",
                                 const std::string& header = "", bool verbose = false);
 private:
     RepliedMessage extractMessage(const std::string& message);
