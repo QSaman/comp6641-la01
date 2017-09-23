@@ -69,6 +69,14 @@ $ ./httpc -v  get "http://httpbin.org/image/png" -o image.png
 $ ./httpc -v get "http://download.blender.org/peach/bigbuckbunny_movies/big_buck_bunny_480p_surround-fix.avi" -o big_buck_bunny.avi
 ```
 
+## Reading HTTP Header from a File
+
+Using `--header-file`, you can associate the content of a file as headers for HTTP request. Since there should be an empty line between header request and the body request in POST, it can be tricky. In my implementation user can put empty lines at the end of fine but the program eliminate them. Here is an example:
+
+```
+$ ./httpc -v post "http://httpbin.org/post" --header-file sample_files/header_data_1.txt -f sample_files/post_data_3.txt
+```
+
 # Third-Party Libraries
 
 I've used the following external libraries. You don't need to download them. It's the job of CMake:

@@ -96,19 +96,30 @@ void handle_http_header()
         }
         auto file_path = options["header-file"].as<std::string>();
         std::ifstream fin;
-        std::ostringstream oss;
+        std::stringstream ss;
         fin.exceptions(std::ifstream::badbit | std::ifstream::failbit);
         try
         {
             fin.open(file_path);
-            oss << fin.rdbuf();
+            ss << fin.rdbuf();
+            std::string line;
+            bool first = true;
+            while (std::getline(ss, line) && line != "\r")
+            {
+                if (line.back() == '\r')
+                    line.pop_back();
+                if (first)
+                    first = false;
+                else
+                    line = "\n" + line;
+                header += line;
+            }
         }
         catch(std::ifstream::failure e)
         {
             std::cerr << "Error in reading file " << file_path << std::endl;
             exit(1);
         }
-        header = oss.str();
     }
 }
 
@@ -233,7 +244,7 @@ bool check_redirect(HttpClient::RepliedMessage& reply)
     if (reply.status_code < 300 || reply.status_code > 399)
         return false;
     static int redirect_num = 0;
-    if (!redirect || redirect_num >= max_redirection)
+    if (!redirect || (redirect_num >= max_redirection && max_redirection != -1))
         return false;
     ++redirect_num;
     auto str = reply.http_header["Location"];

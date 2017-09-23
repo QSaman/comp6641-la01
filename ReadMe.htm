@@ -20,6 +20,7 @@
 <li><a href="#optional-tasks">Optional Tasks</a><ul>
 <li><a href="#support-redirection">Support Redirection</a></li>
 <li><a href="#writing-the-body-of-the-response-to-a-file">Writing The Body of The Response to a file</a></li>
+<li><a href="#reading-http-header-from-a-file">Reading HTTP Header from a File</a></li>
 </ul></li>
 <li><a href="#third-party-libraries">Third-Party Libraries</a></li>
 </ul>
@@ -61,6 +62,9 @@ $ ./httpc -v --redirect  get &quot;http://httpbin.org/absolute-redirect/6&quot;<
 <p>We can store both text and binary files using <code>-o</code> flag.</p>
 <pre><code>$ ./httpc -v  get &quot;http://httpbin.org/image/png&quot; -o image.png
 $ ./httpc -v get &quot;http://download.blender.org/peach/bigbuckbunny_movies/big_buck_bunny_480p_surround-fix.avi&quot; -o big_buck_bunny.avi</code></pre>
+<h2 id="reading-http-header-from-a-file">Reading HTTP Header from a File</h2>
+<p>Using <code>--header-file</code>, you can associate the content of a file as headers for HTTP request. Since there should be an empty line between header request and the body request in POST, it can be tricky. In my implementation user can put empty lines at the end of fine but the program eliminate them. Here is an example:</p>
+<pre><code>$ ./httpc -v post &quot;http://httpbin.org/post&quot; --header-file sample_files/header_data_1.txt -f sample_files/post_data_3.txt</code></pre>
 <h1 id="third-party-libraries">Third-Party Libraries</h1>
 <p>I’ve used the following external libraries. You don’t need to download them. It’s the job of CMake:</p>
 <ul>
