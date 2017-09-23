@@ -230,7 +230,7 @@ void print_reply(const std::string& reply)
     out.exceptions(std::ifstream::badbit | std::ifstream::failbit);
     try
     {
-        out.open(output_file);
+        out.open(output_file, std::ofstream::binary);
         out << reply;
     } catch (std::ofstream::failure e)
     {
