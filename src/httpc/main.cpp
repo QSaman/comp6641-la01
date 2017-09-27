@@ -7,8 +7,7 @@
 #include <cxxopts.hpp>
 #include <LUrlParser.h>
 
-#include "connection.h"
-#include "http_client.h"
+#include "../libhttpc/http_client.h"
 
 enum class CommandType {None, Get, Post, Help};
 
