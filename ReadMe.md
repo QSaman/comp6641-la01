@@ -41,6 +41,7 @@ $ ./httpc -v get "http://httpbin.org/get?course=networking&assignment=1"
 $ ./httpc -v post "http://httpbin.org/post" -h "Content-Type: application/json" -d '{"Assignment": 1}'
 $ ./httpc -v post "http://httpbin.org/post" -h "Content-Type: application/json" -f sample_files/post_data_1.txt
 $ ./httpc -v post "http://httpbin.org/post" -h "Content-Type: application/json" -f sample_files/post_data_2.txt
+$ ./httpc -v post "http://httpbin.org/post" -h "Content-Type: application/json" -h "User-Agent: Mozilla/5.0 (X11; Fedora; Linux x86_64; rv:56.0) Gecko/20100101 Firefox/56.0" -h "Accept-Language: en-US,en;q=0.7,fa;q=0.3" -f sample_files/post_data_2.txt
 $ ./httpc -v post "http://httpbin.org/post" -h "Content-Type: application/x-www-form-urlencoded" -f sample_files/post_data_3.txt
 ```
 
