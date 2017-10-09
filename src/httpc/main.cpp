@@ -93,7 +93,16 @@ void handle_http_header()
     bool has_data = false;
     if (options.count("header"))
     {
-        header = options["header"].as<std::string>();
+        auto& headers = options["header"].as<std::vector<std::string>>();
+        bool first = true;
+        for (auto& val : headers)
+        {
+            if (first)
+                first = false;
+            else
+                header += "\r\n";
+            header += val;
+        }
         has_data = true;
     }
     if (options.count("header-file"))
@@ -139,7 +148,7 @@ void process_input_args(int argc, char* argv[])
     options.add_options()
             ("help", "Show all help menus")
             ("v,verbose", "Prints the detail of the response such as protocol, status, and headers")
-            ("h,header", "Associate headers to HTTP Request with the format 'key:value'", cxxopts::value<string>(), "key:value")
+            ("h,header", "Associate headers to HTTP Request with the format 'key:value'", cxxopts::value<std::vector<std::string>>(), "key:value")
             ("F,header-file", "Associate the content of a file as headers to HTTP Request", cxxopts::value<string>(), "file")
             ("o,output-file", "Writing the body of response to file", cxxopts::value<string>(), "file")
             ("r,redirect", "Redirect to a new address when server sends a status code 3xx")
